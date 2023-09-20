@@ -36,12 +36,13 @@ Resources:
       Environment:
         Variables:
           OUTPUT_BUCKET_NAME: !Ref outputBucket
+          CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME: !GetAtt screenshotsCloudfront.DomainName
       Events:
         Api:
           Type: Api
           Properties:
             Path: "/"
-            Method: GET
+            Method: POST
   # Each Lambda function is defined by properties:
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
