@@ -6,6 +6,10 @@ import {
   HeadObjectCommand,
 } from "@aws-sdk/client-s3";
 
+chromium.font(
+  new URL("./../../fonts/NotoColorEmoji.ttf", import.meta.url).pathname
+);
+
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const { CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME, OUTPUT_BUCKET_NAME } = process.env;
 
