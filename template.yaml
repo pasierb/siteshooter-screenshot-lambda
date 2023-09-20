@@ -75,7 +75,13 @@ Resources:
           - Effect: Allow
             Action:
             - s3:*
-            Resource: !GetAtt outputBucket.Arn
+            Resource: !Sub "${outputBucket.Arn}/*"
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: '*'
 
 
 Outputs:
