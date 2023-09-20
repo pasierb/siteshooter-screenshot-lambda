@@ -11,14 +11,25 @@ chromium.font(
   new URL("./../../fonts/NotoColorEmoji.ttf", import.meta.url).pathname
 );
 
-const s3Client = new S3Client({ region: process.env.AWS_REGION });
-const { CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME, OUTPUT_BUCKET_NAME } = process.env;
+const {
+  CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME,
+  OUTPUT_BUCKET_NAME,
+  AWS_REGION,
+  ACCESS_KEY,
+} = process.env;
+const s3Client = new S3Client({ region: AWS_REGION });
 
 function simpleHash(str) {
   const hash = createHash("sha256");
   hash.update(str);
 
   return hash.digest("hex");
+}
+
+function isAuthenticated(event) {
+  const auth = event.headers.Authorization || event.headers.authorization;
+
+  return auth === `Bearer ${ACCESS_KEY}`;
 }
 
 function keyExists(key) {
@@ -81,16 +92,15 @@ async function createScreenshot(key, config) {
 }
 
 export const handler = async (event) => {
-  if (event.httpMethod !== "POST") {
+  if (!isAuthenticated(event)) {
     return {
-      statusCode: 405,
-      body: "Method Not Allowed",
+      statusCode: 401,
+      body: "Unauthorized",
     };
   }
 
   const config = JSON.parse(event.body);
   const screenshotKey = simpleHash(event.body);
-  console.log("screenshotKey", screenshotKey);
   const exists = await keyExists(screenshotKey);
 
   if (!exists) {

@@ -37,6 +37,7 @@ Resources:
         Variables:
           OUTPUT_BUCKET_NAME: !Ref outputBucket
           CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME: !GetAtt screenshotsCloudfront.DomainName
+          ACCESS_KEY: xLSiD=i6KEhmQF5hFKgOLFYPxePY0ddNFBWOqr!nbnPgx4mPv?i8Wpp-tbvGKoU0!OEJJ7YUD!LPtDiFH1G?TacTlSTnpCSBWowRXS9vpqYe8mR02eDqNA3X66-/bs0y
       Events:
         Api:
           Type: Api
