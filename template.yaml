@@ -47,12 +47,35 @@ Resources:
 
   # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
+  cloudfrontOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Cloudfront OAI for screenshots access
 
   # S3 Bucket for storing screenshots
   outputBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: siteshooter-screenshots
+
+  outputBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref outputBucket
+      PolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: cloudfront.amazonaws.com
+          Action: s3:GetObject
+          Resource: !Sub "${outputBucket.Arn}/*"
+        - Effect: Allow
+          Principal:
+            AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${cloudfrontOriginAccessIdentity}"
+          Action: s3:GetObject
+          Resource: !Sub "${outputBucket.Arn}/*"
 
   createScreenshotRole:
     Type: AWS::IAM::Role
@@ -82,6 +105,46 @@ Resources:
             - logs:CreateLogStream
             - logs:PutLogEvents
             Resource: '*'
+
+  # Cloudfront distribution to serve screenshots from S3
+  screenshotsCloudfront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: screenshotBucketS3Origin
+            DomainName: !Sub "${outputBucket}.s3.eu-west-1.amazonaws.com"
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${cloudfrontOriginAccessIdentity}"
+        Enabled: true
+        Comment: Cloudfront distribution for screenshots
+        DefaultRootObject: index.html
+        # Aliases:
+        # - mysite.example.com
+        # - yoursite.example.com
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          TargetOriginId: screenshotBucketS3Origin
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          # TrustedSigners:
+          # - 1234567890EX
+          # - 1234567891EX
+          ViewerProtocolPolicy: allow-all
+        PriceClass: PriceClass_200
+        # Restrictions:
+        #   GeoRestriction:
+        #     RestrictionType: whitelist
+        #     Locations:
+        #     - AQ
+        #     - CV
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
 
 
 Outputs:
