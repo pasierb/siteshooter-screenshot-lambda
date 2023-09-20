@@ -49,7 +49,7 @@ function screenshotUrl(key) {
 }
 
 async function createScreenshot(key, config) {
-  const { url, width, height } = config;
+  const { url, width, height, removeEl = [] } = config;
 
   const browser = await puppeteer.launch({
     args: chromium.args,
@@ -60,9 +60,17 @@ async function createScreenshot(key, config) {
 
   const page = await browser.newPage();
   await page.goto(url);
-  await page.setViewport({ width, height });
-  const buffer = await page.screenshot();
 
+  // Set the viewport to desired dimensions.
+  await page.setViewport({ width, height });
+  // Remove elements from the page.
+  await Promise.all(
+    removeEl.map((selector) =>
+      page.$$eval(selector, (elements) => elements.forEach((el) => el.remove()))
+    )
+  );
+
+  const buffer = await page.screenshot();
   const command = new PutObjectCommand({
     Bucket: process.env.OUTPUT_BUCKET_NAME,
     Key: key,
