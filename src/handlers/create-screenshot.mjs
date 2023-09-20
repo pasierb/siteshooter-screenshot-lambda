@@ -5,6 +5,7 @@ import {
   PutObjectCommand,
   HeadObjectCommand,
 } from "@aws-sdk/client-s3";
+const { createHash } = await import("node:crypto");
 
 chromium.font(
   new URL("./../../fonts/NotoColorEmoji.ttf", import.meta.url).pathname
@@ -14,13 +15,10 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const { CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME, OUTPUT_BUCKET_NAME } = process.env;
 
 function simpleHash(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return hash.toString();
+  const hash = createHash("sha256");
+  hash.update(str);
+
+  return hash.digest("hex");
 }
 
 function keyExists(key) {
@@ -84,6 +82,7 @@ export const handler = async (event) => {
 
   const config = JSON.parse(event.body);
   const screenshotKey = simpleHash(event.body);
+  console.log("screenshotKey", screenshotKey);
   const exists = await keyExists(screenshotKey);
 
   if (!exists) {

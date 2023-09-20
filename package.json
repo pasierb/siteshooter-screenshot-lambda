@@ -4,9 +4,7 @@
     "version": "0.0.1",
     "private": true,
     "dependencies": {
-        "@aws-sdk/client-dynamodb": "^3.188.0",
         "@aws-sdk/client-s3": "^3.414.0",
-        "@aws-sdk/lib-dynamodb": "^3.188.0",
         "@sparticuz/chromium": "^116.0.0",
         "puppeteer-core": "^21.1.1"
     },
