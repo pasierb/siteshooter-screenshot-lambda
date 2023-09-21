@@ -59,8 +59,38 @@ function screenshotUrl(key) {
   ).toString();
 }
 
+/**
+ *
+ * @param {Page} page
+ * @param {string} selector
+ */
+async function scrollToSelector(page, selector) {
+  if (!selector) {
+    return;
+  }
+
+  await page.$(selector).then((el) => el?.scrollIntoView());
+}
+
+/**
+ *
+ * @param {Page} page
+ * @param {string[]} selectors
+ */
+async function removeElements(page, selectors) {
+  if (!selectors || !selectors.length === 0) {
+    return;
+  }
+
+  await Promise.all(
+    selectors.map((selector) =>
+      page.$$eval(selector, (elements) => elements.forEach((el) => el.remove()))
+    )
+  );
+}
+
 async function createScreenshot(key, config) {
-  const { url, width, height, removeEl = [] } = config;
+  const { url, width, height, removeEl = [], scrollIntoView } = config;
 
   const browser = await puppeteer.launch({
     args: chromium.args,
@@ -75,11 +105,9 @@ async function createScreenshot(key, config) {
   // Set the viewport to desired dimensions.
   await page.setViewport({ width, height });
   // Remove elements from the page.
-  await Promise.all(
-    removeEl.map((selector) =>
-      page.$$eval(selector, (elements) => elements.forEach((el) => el.remove()))
-    )
-  );
+  await removeElements(page, removeEl);
+  // Scroll to the element.
+  await scrollToSelector(page, scrollIntoView);
 
   const buffer = await page.screenshot();
   const command = new PutObjectCommand({
