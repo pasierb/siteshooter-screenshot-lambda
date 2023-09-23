@@ -30,7 +30,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 1024
-      Timeout: 100
+      Timeout: 180
       Role: !GetAtt createScreenshotRole.Arn
       Description: A simple example includes a HTTP get method to get one item by id from a DynamoDB table.
       Environment:

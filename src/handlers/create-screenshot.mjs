@@ -5,7 +5,6 @@ import {
   PutObjectCommand,
   HeadObjectCommand,
 } from "@aws-sdk/client-s3";
-const { createHash } = await import("node:crypto");
 
 chromium.font(
   new URL("./../../fonts/NotoColorEmoji.ttf", import.meta.url).pathname
@@ -18,13 +17,6 @@ const {
   ACCESS_KEY,
 } = process.env;
 const s3Client = new S3Client({ region: AWS_REGION });
-
-function simpleHash(str) {
-  const hash = createHash("sha256");
-  hash.update(str);
-
-  return hash.digest("hex");
-}
 
 function isAuthenticated(event) {
   const auth = event.headers.Authorization || event.headers.authorization;
@@ -100,7 +92,7 @@ async function createScreenshot(key, config) {
   });
 
   const page = await browser.newPage();
-  await page.goto(url);
+  await page.goto(url, { waitUntil: "networkidle2", timeout: 90000 });
 
   // Set the viewport to desired dimensions.
   await page.setViewport({ width, height });
@@ -128,7 +120,7 @@ export const handler = async (event) => {
   }
 
   const config = JSON.parse(event.body);
-  const screenshotKey = simpleHash(event.body);
+  const screenshotKey = config.imageKey;
   const exists = await keyExists(screenshotKey);
 
   if (!exists) {
